@@ -25,7 +25,7 @@ func _ready():
 	if _block_ids == null:
 		clear()
 	update_mesh()
-	material_override = preload("res://materials/vertex_color2.tres")
+	material_override = preload("./materials/chunk_material.tres")
 	
 
 func check_position_in_bounds(v: Vector3):
