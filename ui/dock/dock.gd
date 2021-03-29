@@ -21,3 +21,5 @@ func _on_Walls_pressed():
 func _on_NoTool_pressed():
 	plugin.mode = "none"
 
+func _on_Palette_color_changed(color):
+	plugin.building_color = color

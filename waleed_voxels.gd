@@ -4,9 +4,9 @@ extends EditorPlugin
 const FILL_LENGTH_MAX = 32
 
 var dock
-var color_picker: ColorPickerButton
 var mode = "none"
 var _undo_redo 
+var building_color: Color = Color.white
 
 func handles(object):
 	return object is VoxelChunk
@@ -16,17 +16,17 @@ func _enter_tree():
 	add_custom_type("VoxelWorld", "Spatial", preload("voxel_world.gd"), preload("icon.png"))
 	
 	# Dock stuff
-	dock = preload("./dock.tscn").instance()
+	dock = preload("./ui/dock/dock.tscn").instance()
 	add_control_to_dock(DOCK_SLOT_LEFT_UL, dock)
 	set_input_event_forwarding_always_enabled()
 	
 	dock.plugin = self
-	dock.get_node("Place").connect("pressed", self, "_on_place_btn_pressed")
-	dock.get_node("Remove").connect("pressed", self, "_on_remove_btn_pressed")
-	dock.get_node("Clear").connect("pressed", self, "_on_clear_btn_pressed")
-	dock.get_node("Walls").connect("pressed", self, "_on_walls_btn_pressed")
-	dock.get_node("NoTool").connect("pressed", self, "_on_no_tools_btn_pressed")
-	color_picker = dock.get_node("ColorPickerButton") as ColorPickerButton
+#	dock.get_node("Place").connect("pressed", self, "_on_place_btn_pressed")
+#	dock.get_node("Remove").connect("pressed", self, "_on_remove_btn_pressed")
+#	dock.get_node("Clear").connect("pressed", self, "_on_clear_btn_pressed")
+#	dock.get_node("Walls").connect("pressed", self, "_on_walls_btn_pressed")
+#	dock.get_node("NoTool").connect("pressed", self, "_on_no_tools_btn_pressed")
+#	color_picker = dock.get_node("ColorPickerButton") as ColorPickerButton
 	
 	_undo_redo = get_undo_redo()
 
@@ -36,20 +36,20 @@ func _exit_tree():
 	remove_control_from_docks(dock)
 	dock.free()
 
-func _on_place_btn_pressed():
-	mode = "place"
-
-func _on_remove_btn_pressed():
-	mode = "clear"
-
-func _on_clear_btn_pressed():
-	var selected_nodes = get_editor_interface().get_selection().get_selected_nodes()
-	for node in selected_nodes:
-		if node is VoxelWorld:
-			node.clear_world()
-
-func _on_walls_btn_pressed():
-	mode = "walls"
+#func _on_place_btn_pressed():
+#	mode = "place"
+#
+#func _on_remove_btn_pressed():
+#	mode = "clear"
+#
+#func _on_clear_btn_pressed():
+#	var selected_nodes = get_editor_interface().get_selection().get_selected_nodes()
+#	for node in selected_nodes:
+#		if node is VoxelWorld:
+#			node.clear_world()
+#
+#func _on_walls_btn_pressed():
+#	mode = "walls"
 
 #RENAME THEM ALL PLS.
 var last_block_position: Vector3
@@ -84,10 +84,10 @@ func forward_spatial_gui_input(camera, event):
 				if mode == "place":
 					block_position += result.normal
 					last_block_data = obj.get_block_data(block_position)
-					_undoable_set_block(obj, block_position, 1, true, color_picker.color)
+					_undoable_set_block(obj, block_position, 1, true, building_color)
 				elif mode == "clear":
 					last_block_data = obj.get_block_data(block_position)
-					_undoable_set_block(obj, block_position, 0, true, color_picker.color)
+					_undoable_set_block(obj, block_position, 0, true, building_color)
 				last_block_position = obj.chunk_position*last_voxel_world.CHUNK_SIZE + block_position
 				res = true
 				
@@ -95,7 +95,7 @@ func forward_spatial_gui_input(camera, event):
 				cube.name = "__waleed_cube_gizmo"
 				cube.visible = false
 				var mat = SpatialMaterial.new()
-				mat.albedo_color = color_picker.color
+				mat.albedo_color = building_color
 				mat.albedo_color.a = 0.5
 				mat.flags_transparent = true
 				cube.material_override = mat
@@ -106,9 +106,9 @@ func forward_spatial_gui_input(camera, event):
 		if  _should_perform_filling:
 			if mode == "place" or mode == "clear":
 				_undo_redo.undo()
-				_undoable_fill(last_voxel_world, _block_position_first_corner, _block_position_second_corner, 1 if mode == "place" else 0, true, color_picker.color)
+				_undoable_fill(last_voxel_world, _block_position_first_corner, _block_position_second_corner, 1 if mode == "place" else 0, true, building_color)
 			elif mode == "walls":
-				_undoable_make_four_walls(last_voxel_world, _block_position_first_corner, _block_position_second_corner, int(dock.get_node("WallHeight").text), 1, true, color_picker.color)
+				_undoable_make_four_walls(last_voxel_world, _block_position_first_corner, _block_position_second_corner, int(dock.get_node("WallHeight").text), 1, true, building_color)
 		if cube:
 			cube.queue_free()
 		last_voxel_world = null
@@ -154,10 +154,6 @@ func _vector_comp_abs_add(v: Vector3, i: int):
 
 func _sign_zero_1(x):
 	return 1 if x == 0 else sign(x)
-
-
-
-
 
 ## undoable
 # chunk can be chunk or world

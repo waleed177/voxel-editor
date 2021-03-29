@@ -1,0 +1,144 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://addons/waleed_voxels/ui/dock/dock.gd" type="Script" id=1]
+[ext_resource path="res://addons/waleed_voxels/ui/dock/Palette.gd" type="Script" id=2]
+
+[node name="Control" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = -5.03967
+margin_right = -5.03967
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Place" type="Button" parent="VBoxContainer"]
+margin_right = 1024.0
+margin_bottom = 20.0
+rect_pivot_offset = Vector2( 65, 23 )
+text = "Place"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Remove" type="Button" parent="VBoxContainer"]
+margin_top = 24.0
+margin_right = 1024.0
+margin_bottom = 44.0
+text = "Remove"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Clear" type="Button" parent="VBoxContainer"]
+margin_top = 48.0
+margin_right = 1024.0
+margin_bottom = 68.0
+text = "Clear"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="WallHeight" type="TextEdit" parent="VBoxContainer"]
+margin_top = 72.0
+margin_right = 1024.0
+margin_bottom = 88.0
+rect_min_size = Vector2( 0, 16 )
+text = "4"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Walls" type="Button" parent="VBoxContainer"]
+margin_top = 92.0
+margin_right = 1024.0
+margin_bottom = 112.0
+text = "Walls"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="NoTool" type="Button" parent="VBoxContainer"]
+margin_top = 116.0
+margin_right = 1024.0
+margin_bottom = 136.0
+rect_pivot_offset = Vector2( 65, 23 )
+text = "No Tool"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TabContainer" type="TabContainer" parent="VBoxContainer"]
+margin_top = 140.0
+margin_right = 1024.0
+margin_bottom = 600.0
+size_flags_vertical = 3
+tab_align = 0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Palette" type="Tabs" parent="VBoxContainer/TabContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 4.0
+margin_top = 32.0
+margin_right = -4.0
+margin_bottom = -4.0
+script = ExtResource( 2 )
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/TabContainer/Palette"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/TabContainer/Palette/MarginContainer"]
+margin_right = 1016.0
+margin_bottom = 424.0
+
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer/TabContainer/Palette/MarginContainer/VBoxContainer"]
+margin_right = 1016.0
+margin_bottom = 424.0
+size_flags_vertical = 3
+columns = 4
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorPickerPopup" type="Popup" parent="VBoxContainer/TabContainer/Palette"]
+margin_right = 309.0
+margin_bottom = 492.0
+
+[node name="Panel" type="Panel" parent="VBoxContainer/TabContainer/Palette/ColorPickerPopup"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorPicker" type="ColorPicker" parent="VBoxContainer/TabContainer/Palette/ColorPickerPopup/Panel"]
+margin_left = 8.0
+margin_top = 8.0
+margin_right = 309.0
+margin_bottom = 492.0
+deferred_mode = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+[connection signal="pressed" from="VBoxContainer/Place" to="." method="_on_Place_pressed"]
+[connection signal="pressed" from="VBoxContainer/Remove" to="." method="_on_Remove_pressed"]
+[connection signal="pressed" from="VBoxContainer/Clear" to="." method="_on_Clear_pressed"]
+[connection signal="pressed" from="VBoxContainer/Walls" to="." method="_on_Walls_pressed"]
+[connection signal="pressed" from="VBoxContainer/NoTool" to="." method="_on_NoTool_pressed"]
+[connection signal="color_changed" from="VBoxContainer/TabContainer/Palette" to="." method="_on_Palette_color_changed"]
+[connection signal="color_changed" from="VBoxContainer/TabContainer/Palette/ColorPickerPopup/Panel/ColorPicker" to="VBoxContainer/TabContainer/Palette" method="_on_ColorPicker_color_changed"]
