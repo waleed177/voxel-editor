@@ -8,17 +8,19 @@ const BLOCK_SIZE = 2
 var _chunks = {} # Vector3 -> VoxelChunk
 export(Dictionary) var _chunks_to_save = {}
 var _dirty_chunks: Dictionary = {}
+var type = "voxel_world"
 
 func _ready():
 	if not _chunks_to_save.empty():
 		for position in _chunks_to_save:
 			var chunk_data = _chunks_to_save[position]
 			var chunk = VoxelChunk.new()
-			add_child(chunk)
-			chunk.global_transform.origin = chunk_data.chunk_position * CHUNK_SIZE * BLOCK_SIZE
+			chunk._chunk_size = Vector3(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE)
 			chunk.chunk_position = chunk_data.chunk_position
 			chunk._block_ids = chunk_data.block_ids
 			chunk._block_colors = chunk_data.block_colors
+			add_child(chunk)
+			chunk.global_transform.origin = chunk_data.chunk_position * CHUNK_SIZE * BLOCK_SIZE
 			chunk.update_mesh()
 			_chunks[str(chunk_data.chunk_position)] = chunk
 	if get_child_count() == 0:
@@ -36,6 +38,7 @@ func set_block(v: Vector3, value: int, update_mesh: bool, color: Color = Color.w
 	else:
 		chunk = VoxelChunk.new()
 		add_child(chunk)
+		chunk._chunk_size = Vector3(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE)
 		chunk.global_transform.origin = chunk_position * CHUNK_SIZE * BLOCK_SIZE
 		chunk.chunk_position = chunk_position
 		_chunks[str(chunk_position)] = chunk
@@ -73,6 +76,9 @@ func get_block_data(v: Vector3):
 			color = Color.white
 		}
 	return chunk.get_block_data(_fix_local_block_position(v - chunk_position * CHUNK_SIZE))
+
+func set_block_data(v: Vector3, block_data, update_mesh: bool = true):
+	set_block(v, block_data.id, update_mesh, block_data.color)
 
 func get_global_block_position(chunk_pos: Vector3, block_pos: Vector3) -> Vector3:
 	return chunk_pos*CHUNK_SIZE + block_pos

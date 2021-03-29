@@ -1,7 +1,12 @@
 tool
 extends Control
 
+signal convert_to_mesh_button_pressed
+
 var plugin
+var wall_height setget ,_get_wall_height
+func _get_wall_height():
+	return int($VBoxContainer/WallHeight.text)
 
 func _on_Place_pressed():
 	plugin.mode = "place"
@@ -23,3 +28,9 @@ func _on_NoTool_pressed():
 
 func _on_Palette_color_changed(color):
 	plugin.building_color = color
+
+func _on_SelectionTool_pressed():
+	plugin.mode = "select"
+
+func _on_ConvertToMesh_pressed():
+	emit_signal("convert_to_mesh_button_pressed")

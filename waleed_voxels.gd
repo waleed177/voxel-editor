@@ -5,7 +5,7 @@ const FILL_LENGTH_MAX = 32
 
 var dock
 var mode = "none"
-var _undo_redo 
+var _undo_redo: UndoRedo
 var building_color: Color = Color.white
 
 func handles(object):
@@ -19,37 +19,30 @@ func _enter_tree():
 	dock = preload("./ui/dock/dock.tscn").instance()
 	add_control_to_dock(DOCK_SLOT_LEFT_UL, dock)
 	set_input_event_forwarding_always_enabled()
+	dock.connect("convert_to_mesh_button_pressed", self, "_on_convert_to_mesh_button_pressed")
 	
 	dock.plugin = self
-#	dock.get_node("Place").connect("pressed", self, "_on_place_btn_pressed")
-#	dock.get_node("Remove").connect("pressed", self, "_on_remove_btn_pressed")
-#	dock.get_node("Clear").connect("pressed", self, "_on_clear_btn_pressed")
-#	dock.get_node("Walls").connect("pressed", self, "_on_walls_btn_pressed")
-#	dock.get_node("NoTool").connect("pressed", self, "_on_no_tools_btn_pressed")
-#	color_picker = dock.get_node("ColorPickerButton") as ColorPickerButton
-	
+
 	_undo_redo = get_undo_redo()
+
+func _on_convert_to_mesh_button_pressed():
+	_undo_redo.create_action("convert to mesh")
+	var mesh = make_region_a_mesh_instance(last_voxel_world, _block_position_first_corner, _block_position_second_corner)
+	_undo_redo.add_do_method(get_editor_interface().get_edited_scene_root(), "add_child", mesh)
+	_undo_redo.add_undo_method(get_editor_interface().get_edited_scene_root(), "remove_child", mesh)
+	_undo_redo.add_do_reference(mesh)
+	_undo_redo.add_do_property(mesh, "owner", get_editor_interface().get_edited_scene_root())
+	_undo_redo.add_undo_property(mesh, "owner", mesh.owner)
+	_undoable_fill(last_voxel_world, _block_position_first_corner, _block_position_second_corner, 0, true, Color.white, false)
+	_undo_redo.commit_action()
+	mesh.global_transform.origin = _vector_min_coord(_block_position_first_corner, _block_position_second_corner) * last_voxel_world.BLOCK_SIZE
+	
 
 func _exit_tree():
 	remove_custom_type("VoxelChunk")
 	remove_custom_type("VoxelWorld")
 	remove_control_from_docks(dock)
 	dock.free()
-
-#func _on_place_btn_pressed():
-#	mode = "place"
-#
-#func _on_remove_btn_pressed():
-#	mode = "clear"
-#
-#func _on_clear_btn_pressed():
-#	var selected_nodes = get_editor_interface().get_selection().get_selected_nodes()
-#	for node in selected_nodes:
-#		if node is VoxelWorld:
-#			node.clear_world()
-#
-#func _on_walls_btn_pressed():
-#	mode = "walls"
 
 #RENAME THEM ALL PLS.
 var last_block_position: Vector3
@@ -61,6 +54,7 @@ var last_block_data: Dictionary
 var _should_perform_filling: bool
 var _block_position_first_corner: Vector3
 var _block_position_second_corner: Vector3
+
 
 func forward_spatial_gui_input(camera, event):
 	var res = false
@@ -91,52 +85,77 @@ func forward_spatial_gui_input(camera, event):
 				last_block_position = obj.chunk_position*last_voxel_world.CHUNK_SIZE + block_position
 				res = true
 				
-				var cube = CSGBox.new()
-				cube.name = "__waleed_cube_gizmo"
-				cube.visible = false
-				var mat = SpatialMaterial.new()
-				mat.albedo_color = building_color
-				mat.albedo_color.a = 0.5
-				mat.flags_transparent = true
-				cube.material_override = mat
-				get_editor_interface().get_edited_scene_root().add_child(cube)
+				if mode != "none":
+					var cube = CSGBox.new()
+					cube.name = "__waleed_cube_gizmo"
+					cube.visible = false
+					var mat = SpatialMaterial.new()
+					mat.albedo_color = building_color
+					mat.albedo_color.a = 0.5
+					mat.flags_transparent = true
+					cube.material_override = mat
+					get_editor_interface().get_edited_scene_root().add_child(cube)
+		if event is InputEventMouseButton and mode == "select":
+			if event.button_index == BUTTON_WHEEL_UP:
+				if event.pressed:
+					_block_position_second_corner += last_normal
+					_update_selection()
+				res = true
+			if event.button_index == BUTTON_WHEEL_DOWN:
+				if event.pressed:
+					_block_position_second_corner -= last_normal
+					_update_selection()
+				res = true
 	if not Input.is_mouse_button_pressed(1) and last_voxel_world:
-		var cube = get_editor_interface().get_edited_scene_root().get_node("__waleed_cube_gizmo") as CSGBox
+		var cube = _get_cube_gizmo()
 		
 		if  _should_perform_filling:
 			if mode == "place" or mode == "clear":
 				_undo_redo.undo()
 				_undoable_fill(last_voxel_world, _block_position_first_corner, _block_position_second_corner, 1 if mode == "place" else 0, true, building_color)
 			elif mode == "walls":
-				_undoable_make_four_walls(last_voxel_world, _block_position_first_corner, _block_position_second_corner, int(dock.get_node("WallHeight").text), 1, true, building_color)
-		if cube:
-			cube.queue_free()
-		last_voxel_world = null
+				_undoable_make_four_walls(last_voxel_world, _block_position_first_corner, _block_position_second_corner, dock.wall_height, 1, true, building_color)
+		
+		if mode == "select":
+			pass
+		else:
+			if cube:
+				cube.queue_free()
+			last_voxel_world = null
 	if event is InputEventMouseMotion and Input.is_mouse_button_pressed(1) and last_voxel_world:
 		var plane = Plane(last_normal, last_normal.dot(last_ray_hit-last_normal))
-		var cube = get_editor_interface().get_edited_scene_root().get_node("__waleed_cube_gizmo") as CSGBox
+		var cube = _get_cube_gizmo()
 		var from = camera.project_ray_origin(event.position)
 		
 		var intersection = plane.intersects_ray(from, camera.project_ray_normal(event.position))
+		if not intersection:
+			print("No intersection while dragging")
+			return true
 		var block_pos = _vector_to_block_pos(intersection)
 		
-		_should_perform_filling = intersection and (last_ray_hit - intersection).length() > 2
+		_should_perform_filling = mode != "none" and intersection and (last_ray_hit - intersection).length() > 2
 		
 		if _should_perform_filling:
-			cube.visible = true
+			if cube:
+				cube.visible = true
 			var new_last_block_position = last_block_position
 			if mode == "place":
 				new_last_block_position -= last_normal
-			var size =  _vector_comp_abs_add(block_pos-new_last_block_position, 1)*last_voxel_world.BLOCK_SIZE
-			cube.width = size.x
-			cube.height = size.y
-			cube.depth = size.z
-			cube.global_transform.origin = (block_pos + new_last_block_position) + Vector3(0.5, 0.5, 0.5)*last_voxel_world.BLOCK_SIZE #new_last_block_position*last_voxel_world.BLOCK_SIZE + size/2
 			_block_position_first_corner = new_last_block_position
 			_block_position_second_corner = block_pos
+			_update_selection()
 			
 		res = true
 	return res
+
+func _update_selection():
+	var cube = _get_cube_gizmo()
+	var size = _vector_comp_abs_add(_block_position_second_corner-_block_position_first_corner, 1)*last_voxel_world.BLOCK_SIZE
+	cube.width = size.x + sign(size.x)*0.2
+	cube.height = size.y + sign(size.y)*0.2
+	cube.depth = size.z + sign(size.z)*0.2
+	cube.invert_faces = sign(cube.width) * sign(cube.height) * sign(cube.depth) < 0
+	cube.global_transform.origin = (_block_position_second_corner + _block_position_first_corner) + Vector3(0.5, 0.5, 0.5)*last_voxel_world.BLOCK_SIZE #new_last_block_position*last_voxel_world.BLOCK_SIZE + size/2
 
 func _vector_to_block_pos(v: Vector3):
 	return Vector3(floor(v.x/2), floor(v.y/2), floor(v.z/2))
@@ -152,9 +171,17 @@ func _better_range(from: int, to: int, max_range: int):
 func _vector_comp_abs_add(v: Vector3, i: int):
 	return Vector3(v.x + _sign_zero_1(v.x)*i, v.y + _sign_zero_1(v.y)*i, v.z + _sign_zero_1(v.z)*i)
 
+func _vector_abs(v: Vector3):
+	return Vector3(abs(v.x), abs(v.y), abs(v.z))
+
+func _vector_min_coord(v1: Vector3, v2: Vector3):
+	return Vector3(min(v1.x, v2.x), min(v1.y, v2.y), min(v1.z, v2.z))
+
 func _sign_zero_1(x):
 	return 1 if x == 0 else sign(x)
 
+func _get_cube_gizmo():
+	return get_editor_interface().get_edited_scene_root().get_node_or_null("__waleed_cube_gizmo")
 ## undoable
 # chunk can be chunk or world
 func _undoable_set_block(chunk, v: Vector3, id: int, update_mesh: bool, color: Color = Color.white, commit_action: bool = true):
@@ -192,6 +219,22 @@ func _undoable_make_four_walls(chunk, from: Vector3, to: Vector3, height: int, i
 		_undo_redo.add_undo_method(chunk, "update_dirty_chunks")
 	if commit_action:
 		_undo_redo.commit_action()
+
+
+func make_region_a_mesh_instance(world, from: Vector3, to: Vector3):
+	var size = _vector_abs(to-from) + Vector3(1,1,1)
+	var chunk = VoxelChunk.new()
+	chunk.setup(size)
+	var origin = Vector3(min(from.x, to.x), min(from.y, to.y), min(from.z, to.z))
+	for x in _better_range(from.x, to.x, FILL_LENGTH_MAX):
+		for y in _better_range(from.y, to.y, FILL_LENGTH_MAX):
+			for z in _better_range(from.z, to.z, FILL_LENGTH_MAX):
+				var v = Vector3(x,y,z)
+				var _v = v - origin
+				chunk.set_block_data(_v, world.get_block_data(v), false)
+	chunk.update_mesh()
+	chunk.set_script(null)
+	return chunk
 
 #func _fill(chunk, from: Vector3, to: Vector3):
 #	for x in _better_range(from.x, to.x, FILL_LENGTH_MAX):

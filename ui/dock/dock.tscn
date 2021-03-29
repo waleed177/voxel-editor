@@ -66,10 +66,30 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="NoTool" type="Button" parent="VBoxContainer"]
+[node name="SelectionTool" type="Button" parent="VBoxContainer"]
 margin_top = 116.0
 margin_right = 1024.0
 margin_bottom = 136.0
+rect_pivot_offset = Vector2( 65, 23 )
+text = "Select"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ConvertToMesh" type="Button" parent="VBoxContainer"]
+margin_top = 140.0
+margin_right = 1024.0
+margin_bottom = 160.0
+rect_pivot_offset = Vector2( 65, 23 )
+text = "Convert To Mesh"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="NoTool" type="Button" parent="VBoxContainer"]
+margin_top = 164.0
+margin_right = 1024.0
+margin_bottom = 184.0
 rect_pivot_offset = Vector2( 65, 23 )
 text = "No Tool"
 __meta__ = {
@@ -77,7 +97,7 @@ __meta__ = {
 }
 
 [node name="TabContainer" type="TabContainer" parent="VBoxContainer"]
-margin_top = 140.0
+margin_top = 188.0
 margin_right = 1024.0
 margin_bottom = 600.0
 size_flags_vertical = 3
@@ -104,11 +124,11 @@ __meta__ = {
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/TabContainer/Palette/MarginContainer"]
 margin_right = 1016.0
-margin_bottom = 424.0
+margin_bottom = 376.0
 
 [node name="GridContainer" type="GridContainer" parent="VBoxContainer/TabContainer/Palette/MarginContainer/VBoxContainer"]
 margin_right = 1016.0
-margin_bottom = 424.0
+margin_bottom = 376.0
 size_flags_vertical = 3
 columns = 4
 __meta__ = {
@@ -127,10 +147,10 @@ __meta__ = {
 }
 
 [node name="ColorPicker" type="ColorPicker" parent="VBoxContainer/TabContainer/Palette/ColorPickerPopup/Panel"]
-margin_left = 8.0
-margin_top = 8.0
-margin_right = 309.0
-margin_bottom = 492.0
+margin_left = 12.0
+margin_top = 12.0
+margin_right = 313.0
+margin_bottom = 496.0
 deferred_mode = true
 __meta__ = {
 "_edit_use_anchors_": false
@@ -139,6 +159,8 @@ __meta__ = {
 [connection signal="pressed" from="VBoxContainer/Remove" to="." method="_on_Remove_pressed"]
 [connection signal="pressed" from="VBoxContainer/Clear" to="." method="_on_Clear_pressed"]
 [connection signal="pressed" from="VBoxContainer/Walls" to="." method="_on_Walls_pressed"]
+[connection signal="pressed" from="VBoxContainer/SelectionTool" to="." method="_on_SelectionTool_pressed"]
+[connection signal="pressed" from="VBoxContainer/ConvertToMesh" to="." method="_on_ConvertToMesh_pressed"]
 [connection signal="pressed" from="VBoxContainer/NoTool" to="." method="_on_NoTool_pressed"]
 [connection signal="color_changed" from="VBoxContainer/TabContainer/Palette" to="." method="_on_Palette_color_changed"]
 [connection signal="color_changed" from="VBoxContainer/TabContainer/Palette/ColorPickerPopup/Panel/ColorPicker" to="VBoxContainer/TabContainer/Palette" method="_on_ColorPicker_color_changed"]

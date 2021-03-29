@@ -9,6 +9,8 @@ var camera: Camera
 export(Vector3) var chunk_position: Vector3
 var _indicies = {} #(x,y,z)face -> [v1,v2,v3,v4]
 var _free_index = 0
+var _chunk_size: Vector3 = Vector3(8,8,8)
+var _world#: VoxelWorld
 
 func get_indicies(v: Vector3, face: String):
 	var key = str(v) + face
@@ -21,64 +23,79 @@ func alloc_indicies(v: Vector3, face: String):
 	var indicies = get_indicies(v, face)
 	if indicies: return indicies
 
+func setup(chunk_size):
+	_chunk_size = chunk_size
+	print("Chunk " + str(chunk_position) + " setup with size " + str(chunk_size))
+	if _block_ids == null:
+		clear()
+	update_mesh()
+	material_override = preload("./materials/chunk_material.tres")
+
 func _ready():
 	if _block_ids == null:
 		clear()
 	update_mesh()
 	material_override = preload("./materials/chunk_material.tres")
+	_world = get_parent()
+	print("chunk " + str(chunk_position) + " is ready.")
 	
 
 func check_position_in_bounds(v: Vector3):
-	return v.x < 0 or v.x >= get_parent().CHUNK_SIZE \
-			or v.y < 0 or v.y >= get_parent().CHUNK_SIZE \
-			or v.z < 0 or v.z >= get_parent().CHUNK_SIZE
+	return not (v.x < 0 or v.x >= _chunk_size.x \
+			or v.y < 0 or v.y >=_chunk_size.y \
+			or v.z < 0 or v.z >= _chunk_size.z)
 
 func get_block_index(v: Vector3):
-	return v.x + get_parent().CHUNK_SIZE*(v.y + get_parent().CHUNK_SIZE*v.z)
+	return v.x + _chunk_size.x*v.y + _chunk_size.x*_chunk_size.y*v.z
 
 func set_block(v: Vector3, value: int, update_mesh: bool, color: Color = Color.white):
-	var world = get_parent()
-	var global_pos = get_parent().get_global_block_position(chunk_position, v)
-	if check_position_in_bounds(v): 
-		world.set_block(global_pos, value, update_mesh, color)
+	var global_pos = _world.get_global_block_position(chunk_position, v) if _world else null
+	if not check_position_in_bounds(v): 
+		_world.set_block(global_pos, value, update_mesh, color)
 	else:
 		var i = get_block_index(v)
 		_block_ids[i] = value
 		_block_colors[i] = color
-		world.mark_as_dirty(self)
-		if v.x == 0:
-			world.mark_as_dirty(world.get_chunk_block_in(global_pos+Vector3(-1,0,0)))
-		if v.y == 0:
-			world.mark_as_dirty(world.get_chunk_block_in(global_pos+Vector3(0,-1,0)))
-		if v.z == 0:
-			world.mark_as_dirty(world.get_chunk_block_in(global_pos+Vector3(0,0,-1)))
-		if v.x == world.CHUNK_SIZE-1:
-			world.mark_as_dirty(world.get_chunk_block_in(global_pos+Vector3(1,0,0)))
-		if v.y == world.CHUNK_SIZE-1:
-			world.mark_as_dirty(world.get_chunk_block_in(global_pos+Vector3(0,1,0)))
-		if v.z == world.CHUNK_SIZE-1:
-			world.mark_as_dirty(world.get_chunk_block_in(global_pos+ Vector3(0,0,1)))
-		if update_mesh:
-			world.update_dirty_chunks()
+		if _world:
+			_world.mark_as_dirty(self)
+			if v.x == 0:
+				_world.mark_as_dirty(_world.get_chunk_block_in(global_pos+Vector3(-1,0,0)))
+			if v.y == 0:
+				_world.mark_as_dirty(_world.get_chunk_block_in(global_pos+Vector3(0,-1,0)))
+			if v.z == 0:
+				_world.mark_as_dirty(_world.get_chunk_block_in(global_pos+Vector3(0,0,-1)))
+			if v.x == _world.CHUNK_SIZE-1:
+				_world.mark_as_dirty(_world.get_chunk_block_in(global_pos+Vector3(1,0,0)))
+			if v.y == _world.CHUNK_SIZE-1:
+				_world.mark_as_dirty(_world.get_chunk_block_in(global_pos+Vector3(0,1,0)))
+			if v.z == _world.CHUNK_SIZE-1:
+				_world.mark_as_dirty(_world.get_chunk_block_in(global_pos+ Vector3(0,0,1)))
+			if update_mesh:
+				_world.update_dirty_chunks()
+		else:
+			update_mesh()
 		
 		#or v.y == 0 or v.z == 0 or v.x == world.CHUNK_SIZE-1 or v.y == world.CHUNK_SIZE-1 or v.z == world.CHUNK_SIZE-1:
 	
 
 func get_block(v: Vector3):
-	if check_position_in_bounds(v): 
-		return get_parent().get_block(get_parent().get_global_block_position(chunk_position, v))
+	if  not check_position_in_bounds(v): 
+		return _world.get_block(_world.get_global_block_position(chunk_position, v)) if _world else 0
 	else:
 		return _block_ids[get_block_index(v)]
 
 func get_block_data(v: Vector3):
-	if check_position_in_bounds(v): 
-		return get_parent().get_block_data(get_parent().get_global_block_position(chunk_position, v))
+	if not check_position_in_bounds(v): 
+		return _world.get_block_data(_world.get_global_block_position(chunk_position, v))
 	else:
 		var i = get_block_index(v)
 		return {
 			id = _block_ids[i],
 			color = _block_colors[i]
 		}
+
+func set_block_data(v: Vector3, block_data, update_mesh: bool = true):
+	set_block(v, block_data.id, update_mesh, block_data.color)
 
 func build_block(st, v, color: Color = Color.white):
 	if get_block(v) == 0: return
@@ -111,7 +128,7 @@ func clear():
 	_block_ids = []
 	_block_colors = []
 	_indicies = {}
-	for i in get_parent().CHUNK_SIZE * get_parent().CHUNK_SIZE * get_parent().CHUNK_SIZE:
+	for i in _chunk_size.x * _chunk_size.y * _chunk_size.z:
 		_block_ids.append(0)
 		_block_colors.append(Color.white)
 
@@ -120,9 +137,9 @@ func update_mesh():
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	
 	var i = -1
-	for z in range(0, 8):
-		for y in range(0, 8):
-			for x in range(0, 8):
+	for z in range(0, _chunk_size.z):
+		for y in range(0, _chunk_size.y):
+			for x in range(0, _chunk_size.x):
 				i += 1
 				var pos = Vector3(x,y,z)
 				build_block(st, pos, _block_colors[i])
