@@ -23,6 +23,8 @@ func _enter_tree():
 	add_control_to_dock(DOCK_SLOT_LEFT_UL, dock)
 	dock.connect("convert_to_mesh_button_pressed", self, "_on_convert_to_mesh_button_pressed")
 	dock.connect("schematic_changed", self, "_on_schematic_changed")
+	dock.connect("fill_button_pressed", self, "_on_fill_button_pressed")
+	
 	set_input_event_forwarding_always_enabled()
 
 	_undo_redo = get_undo_redo()
@@ -45,6 +47,10 @@ func _on_convert_to_mesh_button_pressed():
 	
 	_undo_redo.add_do_method(self, "_change_position_of_object", mesh, VoxelUtils.vector_min_coord(_selection.first_corner, _selection.second_corner) * _selection.voxel_world.BLOCK_SIZE)
 	_undo_redo.commit_action()
+
+func _on_fill_button_pressed():
+	_undoable_fill(_selection.voxel_world, _selection.first_corner, _selection.second_corner, 1, true, building_color)
+	
 
 func _change_position_of_object(obj, position):
 	obj.global_transform.origin = position

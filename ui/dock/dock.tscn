@@ -30,28 +30,34 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Remove" type="Button" parent="VBoxContainer"]
+[node name="Fill" type="Button" parent="VBoxContainer"]
 margin_top = 24.0
 margin_right = 1024.0
 margin_bottom = 44.0
+text = "Fill"
+
+[node name="Remove" type="Button" parent="VBoxContainer"]
+margin_top = 48.0
+margin_right = 1024.0
+margin_bottom = 68.0
 text = "Remove"
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="Clear" type="Button" parent="VBoxContainer"]
-margin_top = 48.0
+margin_top = 72.0
 margin_right = 1024.0
-margin_bottom = 68.0
+margin_bottom = 92.0
 text = "Clear"
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="WallHeight" type="TextEdit" parent="VBoxContainer"]
-margin_top = 72.0
+margin_top = 96.0
 margin_right = 1024.0
-margin_bottom = 88.0
+margin_bottom = 112.0
 rect_min_size = Vector2( 0, 16 )
 text = "4"
 __meta__ = {
@@ -59,18 +65,18 @@ __meta__ = {
 }
 
 [node name="Walls" type="Button" parent="VBoxContainer"]
-margin_top = 92.0
+margin_top = 116.0
 margin_right = 1024.0
-margin_bottom = 112.0
+margin_bottom = 136.0
 text = "Walls"
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="SelectionTool" type="Button" parent="VBoxContainer"]
-margin_top = 116.0
+margin_top = 140.0
 margin_right = 1024.0
-margin_bottom = 136.0
+margin_bottom = 160.0
 rect_pivot_offset = Vector2( 65, 23 )
 text = "Select"
 __meta__ = {
@@ -78,9 +84,9 @@ __meta__ = {
 }
 
 [node name="ConvertToMesh" type="Button" parent="VBoxContainer"]
-margin_top = 140.0
+margin_top = 164.0
 margin_right = 1024.0
-margin_bottom = 160.0
+margin_bottom = 184.0
 rect_pivot_offset = Vector2( 65, 23 )
 text = "Convert To Mesh"
 __meta__ = {
@@ -88,9 +94,9 @@ __meta__ = {
 }
 
 [node name="NoTool" type="Button" parent="VBoxContainer"]
-margin_top = 164.0
+margin_top = 188.0
 margin_right = 1024.0
-margin_bottom = 184.0
+margin_bottom = 208.0
 rect_pivot_offset = Vector2( 65, 23 )
 text = "No Tool"
 __meta__ = {
@@ -98,7 +104,7 @@ __meta__ = {
 }
 
 [node name="TabContainer" type="TabContainer" parent="VBoxContainer"]
-margin_top = 188.0
+margin_top = 212.0
 margin_right = 1024.0
 margin_bottom = 600.0
 size_flags_vertical = 3
@@ -125,7 +131,7 @@ __meta__ = {
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/TabContainer/Palette/MarginContainer"]
 margin_right = 1016.0
-margin_bottom = 376.0
+margin_bottom = 352.0
 
 [node name="AddColor" type="Button" parent="VBoxContainer/TabContainer/Palette/MarginContainer/VBoxContainer"]
 margin_right = 1016.0
@@ -136,7 +142,7 @@ text = "Add Color"
 [node name="GridContainer" type="GridContainer" parent="VBoxContainer/TabContainer/Palette/MarginContainer/VBoxContainer"]
 margin_top = 24.0
 margin_right = 1016.0
-margin_bottom = 376.0
+margin_bottom = 352.0
 size_flags_vertical = 3
 columns = 7
 __meta__ = {
@@ -197,7 +203,7 @@ __meta__ = {
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/TabContainer/Schematics/MarginContainer2"]
 margin_right = 1016.0
-margin_bottom = 376.0
+margin_bottom = 352.0
 
 [node name="SchematicName" type="TextEdit" parent="VBoxContainer/TabContainer/Schematics/MarginContainer2/VBoxContainer"]
 margin_right = 1016.0
@@ -224,6 +230,7 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 [connection signal="pressed" from="VBoxContainer/Place" to="." method="_on_Place_pressed"]
+[connection signal="pressed" from="VBoxContainer/Fill" to="." method="_on_Fill_pressed"]
 [connection signal="pressed" from="VBoxContainer/Remove" to="." method="_on_Remove_pressed"]
 [connection signal="pressed" from="VBoxContainer/Clear" to="." method="_on_Clear_pressed"]
 [connection signal="pressed" from="VBoxContainer/Walls" to="." method="_on_Walls_pressed"]

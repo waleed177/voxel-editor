@@ -1,3 +1,4 @@
+tool
 extends Reference
 class_name VoxelSelectionInformation
 
@@ -10,3 +11,6 @@ var block_data: Dictionary
 var should_perform_filling: bool
 var first_corner: Vector3
 var second_corner: Vector3
+
+func reset():
+	voxel_world = null
