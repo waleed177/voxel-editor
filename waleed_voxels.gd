@@ -25,18 +25,27 @@ func _enter_tree():
 
 	_undo_redo = get_undo_redo()
 
+func _print(st):
+	print(st)
+
 func _on_convert_to_mesh_button_pressed():
 	_undo_redo.create_action("convert to mesh")
 	var mesh = make_region_a_mesh_instance(last_voxel_world, _block_position_first_corner, _block_position_second_corner)
 	_undo_redo.add_do_method(get_editor_interface().get_edited_scene_root(), "add_child", mesh)
 	_undo_redo.add_undo_method(get_editor_interface().get_edited_scene_root(), "remove_child", mesh)
+	
 	_undo_redo.add_do_reference(mesh)
 	_undo_redo.add_do_property(mesh, "owner", get_editor_interface().get_edited_scene_root())
 	_undo_redo.add_undo_property(mesh, "owner", mesh.owner)
+
 	_undoable_fill(last_voxel_world, _block_position_first_corner, _block_position_second_corner, 0, true, Color.white, false)
-	_undo_redo.commit_action()
-	mesh.global_transform.origin = _vector_min_coord(_block_position_first_corner, _block_position_second_corner) * last_voxel_world.BLOCK_SIZE
 	
+	_undo_redo.add_do_method(self, "_change_position_of_object", mesh, _vector_min_coord(_block_position_first_corner, _block_position_second_corner) * last_voxel_world.BLOCK_SIZE)
+	_undo_redo.commit_action()
+
+func _change_position_of_object(obj, position):
+	obj.global_transform.origin = position
+
 
 func _exit_tree():
 	remove_custom_type("VoxelChunk")

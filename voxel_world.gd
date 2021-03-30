@@ -37,10 +37,10 @@ func set_block(v: Vector3, value: int, update_mesh: bool, color: Color = Color.w
 		chunk = _chunks[str(chunk_position)]
 	else:
 		chunk = VoxelChunk.new()
-		add_child(chunk)
-		chunk._chunk_size = Vector3(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE)
-		chunk.global_transform.origin = chunk_position * CHUNK_SIZE * BLOCK_SIZE
 		chunk.chunk_position = chunk_position
+		chunk._chunk_size = Vector3(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE)
+		add_child(chunk)
+		chunk.global_transform.origin = chunk_position * CHUNK_SIZE * BLOCK_SIZE
 		_chunks[str(chunk_position)] = chunk
 	chunk.set_block(_fix_local_block_position(v - chunk_position * CHUNK_SIZE), value, update_mesh, color)
 	_chunks_to_save[str(chunk_position)] = {
