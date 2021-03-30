@@ -9,7 +9,7 @@ var camera: Camera
 export(Vector3) var chunk_position: Vector3
 var _indicies = {} #(x,y,z)face -> [v1,v2,v3,v4]
 var _free_index = 0
-var _chunk_size: Vector3 = Vector3(8,8,8)
+export(Vector3) var chunk_size: Vector3 = Vector3(8,8,8)
 var _world#: VoxelWorld
 
 func get_indicies(v: Vector3, face: String):
@@ -24,8 +24,7 @@ func alloc_indicies(v: Vector3, face: String):
 	if indicies: return indicies
 
 func setup(chunk_size):
-	_chunk_size = chunk_size
-	print("Chunk " + str(chunk_position) + " setup with size " + str(chunk_size))
+	self.chunk_size = chunk_size
 	if _block_ids == null:
 		clear()
 	update_mesh()
@@ -41,12 +40,15 @@ func _ready():
 	
 
 func check_position_in_bounds(v: Vector3):
-	return not (v.x < 0 or v.x >= _chunk_size.x \
-			or v.y < 0 or v.y >=_chunk_size.y \
-			or v.z < 0 or v.z >= _chunk_size.z)
+#	print("v.x < 0 or v.x >= chunk_size.x: " + str(v.x < 0 or v.x >= chunk_size.x))
+#	print("v.y < 0 or v.y >= chunk_size.y: " + str(v.y < 0 or v.y >= chunk_size.y))
+#	print("v.z < 0 or v.z >= chunk_size.z: " + str( v.z ) +  " " + str(chunk_size.z) + " " + str(v.z < 0 or v.z >= chunk_size.z))
+	return not (v.x < 0 or v.x >= chunk_size.x \
+			or v.y < 0 or v.y >= chunk_size.y \
+			or v.z < 0 or v.z >= chunk_size.z)
 
 func get_block_index(v: Vector3):
-	return v.x + _chunk_size.x*v.y + _chunk_size.x*_chunk_size.y*v.z
+	return v.x + chunk_size.x*v.y + chunk_size.x*chunk_size.y*v.z
 
 func set_block(v: Vector3, value: int, update_mesh: bool, color: Color = Color.white):
 	var global_pos = _world.get_global_block_position(chunk_position, v) if _world else null
@@ -128,7 +130,7 @@ func clear():
 	_block_ids = []
 	_block_colors = []
 	_indicies = {}
-	for i in _chunk_size.x * _chunk_size.y * _chunk_size.z:
+	for i in chunk_size.x * chunk_size.y * chunk_size.z:
 		_block_ids.append(0)
 		_block_colors.append(Color.white)
 
@@ -137,9 +139,9 @@ func update_mesh():
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	
 	var i = -1
-	for z in range(0, _chunk_size.z):
-		for y in range(0, _chunk_size.y):
-			for x in range(0, _chunk_size.x):
+	for z in range(0, chunk_size.z):
+		for y in range(0, chunk_size.y):
+			for x in range(0, chunk_size.x):
 				i += 1
 				var pos = Vector3(x,y,z)
 				build_block(st, pos, _block_colors[i])

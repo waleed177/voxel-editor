@@ -2,9 +2,11 @@ tool
 extends Control
 
 signal convert_to_mesh_button_pressed
+signal schematic_changed
 
 var plugin
 var wall_height setget ,_get_wall_height
+
 func _get_wall_height():
 	return int($VBoxContainer/WallHeight.text)
 
@@ -34,3 +36,6 @@ func _on_SelectionTool_pressed():
 
 func _on_ConvertToMesh_pressed():
 	emit_signal("convert_to_mesh_button_pressed")
+
+func _on_Schematics_schematic_changed(schema):
+	emit_signal("schematic_changed", schema)

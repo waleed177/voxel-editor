@@ -15,7 +15,7 @@ func _ready():
 		for position in _chunks_to_save:
 			var chunk_data = _chunks_to_save[position]
 			var chunk = VoxelChunk.new()
-			chunk._chunk_size = Vector3(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE)
+			chunk.chunk_size = Vector3(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE)
 			chunk.chunk_position = chunk_data.chunk_position
 			chunk._block_ids = chunk_data.block_ids
 			chunk._block_colors = chunk_data.block_colors
@@ -38,7 +38,7 @@ func set_block(v: Vector3, value: int, update_mesh: bool, color: Color = Color.w
 	else:
 		chunk = VoxelChunk.new()
 		chunk.chunk_position = chunk_position
-		chunk._chunk_size = Vector3(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE)
+		chunk.chunk_size = Vector3(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE)
 		add_child(chunk)
 		chunk.global_transform.origin = chunk_position * CHUNK_SIZE * BLOCK_SIZE
 		_chunks[str(chunk_position)] = chunk
@@ -106,3 +106,6 @@ func update_dirty_chunks():
 	for dirty in _dirty_chunks:
 		_dirty_chunks[dirty].update_mesh()
 	_dirty_chunks.clear()
+
+func update_mesh():
+	update_dirty_chunks()

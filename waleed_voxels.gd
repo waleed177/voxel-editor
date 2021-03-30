@@ -8,6 +8,7 @@ var mode = "none"
 var _undo_redo: UndoRedo
 var building_color: Color = Color.white
 var _selection: VoxelSelectionInformation = VoxelSelectionInformation.new()
+var schema_to_place: VoxelSchematic
 
 func handles(object):
 	return object is VoxelChunk
@@ -18,13 +19,17 @@ func _enter_tree():
 	
 	# Dock stuff
 	dock = preload("./ui/dock/dock.tscn").instance()
-	add_control_to_dock(DOCK_SLOT_LEFT_UL, dock)
-	set_input_event_forwarding_always_enabled()
-	dock.connect("convert_to_mesh_button_pressed", self, "_on_convert_to_mesh_button_pressed")
-	
 	dock.plugin = self
+	add_control_to_dock(DOCK_SLOT_LEFT_UL, dock)
+	dock.connect("convert_to_mesh_button_pressed", self, "_on_convert_to_mesh_button_pressed")
+	dock.connect("schematic_changed", self, "_on_schematic_changed")
+	set_input_event_forwarding_always_enabled()
 
 	_undo_redo = get_undo_redo()
+
+func _on_schematic_changed(schema):
+	self.schema_to_place = schema
+	mode = "place_schematic"
 
 func _on_convert_to_mesh_button_pressed():
 	_undo_redo.create_action("convert to mesh")
@@ -52,12 +57,14 @@ func _exit_tree():
 
 func forward_spatial_gui_input(camera, event):
 	var res = false
+	if mode == "none":
+		return false
 	if event is InputEventMouseButton:
 		if event.pressed && event.button_index == 1:
 			var from = camera.project_ray_origin(event.position)
 			var to = from + camera.project_ray_normal(event.position) * 100
 			var result = get_viewport().world.direct_space_state.intersect_ray(from, to)
-			if not result: return
+			if not result: return false
 			
 			var obj = result.collider.get_parent()
 			
@@ -69,16 +76,22 @@ func forward_spatial_gui_input(camera, event):
 				_selection.voxel_chunk = obj
 				_selection.voxel_world = obj.get_parent()
 				_selection.should_perform_filling = false
+				_selection.block_position = obj.chunk_position*_selection.voxel_world.CHUNK_SIZE + block_position
 
 				if mode == "place":
-					block_position += result.normal
-					_selection.block_data = obj.get_block_data(block_position)
-					_undoable_set_block(obj, block_position, 1, true, building_color)
+					_selection.block_position += result.normal
+					_selection.block_data = _selection.voxel_world.get_block_data(_selection.block_position)
+					_undoable_set_block(_selection.voxel_world, _selection.block_position, 1, true, building_color)
+					res = true
 				elif mode == "clear":
-					_selection.block_data = obj.get_block_data(block_position)
-					_undoable_set_block(obj, block_position, 0, true, building_color)
-				_selection.block_position = obj.chunk_position*_selection.voxel_world.CHUNK_SIZE + block_position
-				res = true
+					_selection.block_data = _selection.voxel_world.get_block_data(_selection.block_position)
+					_undoable_set_block(_selection.voxel_world, _selection.block_position, 0, true, building_color)
+					res = true
+				elif mode == "place_schematic":
+					_selection.block_position += result.normal
+					_undoable_place_chunk(_selection.voxel_world, schema_to_place, _selection.block_position)
+					res = true
+					
 				
 				if mode != "none":
 					var cube = CSGBox.new()
@@ -125,7 +138,7 @@ func forward_spatial_gui_input(camera, event):
 		var intersection = plane.intersects_ray(from, camera.project_ray_normal(event.position))
 		if not intersection:
 			print("No intersection while dragging")
-			return true
+			return false
 		var block_pos = _vector_to_block_pos(intersection)
 		
 		_selection.should_perform_filling = mode != "none" and intersection and (_selection.ray_hit - intersection).length() > 2
@@ -192,11 +205,13 @@ func _undoable_make_four_walls(chunk, from: Vector3, to: Vector3, height: int, i
 	if commit_action:
 		_undo_redo.commit_action()
 
-func make_region_a_mesh_instance(world, from: Vector3, to: Vector3):
+func make_region_a_mesh_instance(world, from: Vector3, to: Vector3, as_chunk: bool = false):
 	var size = VoxelUtils.vector_abs(to-from) + Vector3(1,1,1)
 	var chunk = VoxelChunk.new()
 	chunk.setup(size)
 	var origin = Vector3(min(from.x, to.x), min(from.y, to.y), min(from.z, to.z))
+	print(_better_range(from.z, to.z, FILL_LENGTH_MAX))
+	
 	for z in _better_range(from.z, to.z, FILL_LENGTH_MAX):
 		for y in _better_range(from.y, to.y, FILL_LENGTH_MAX):
 			for x in _better_range(from.x, to.x, FILL_LENGTH_MAX):
@@ -204,8 +219,29 @@ func make_region_a_mesh_instance(world, from: Vector3, to: Vector3):
 				var _v = v - origin
 				chunk.set_block_data(_v, world.get_block_data(v), false)
 	chunk.update_mesh()
-	chunk.set_script(null)
+	if not as_chunk:
+		chunk.set_script(null)
 	return chunk
+
+func _undoable_place_chunk(world, chunk, position: Vector3, commit_action = true):
+	if commit_action:
+		_undo_redo.create_action("Place Schematic")
+	
+	for z in range(0, chunk.chunk_size.z):
+		for y in range(0, chunk.chunk_size.y):
+			for x in range(0, chunk.chunk_size.x):
+				var v = Vector3(x,y,z)
+				var block = chunk.get_block_data(v)
+				_undoable_set_block(world, v+position, block.id, false, block.color)
+	
+	_undo_redo.add_do_method(world, "update_mesh")
+	_undo_redo.add_undo_method(world, "update_mesh")
+	
+	if commit_action:
+		_undo_redo.commit_action()
+
+func convert_selection_to_mesh(as_chunk: bool= false):
+	return make_region_a_mesh_instance(_selection.voxel_world, _selection.first_corner, _selection.second_corner, as_chunk)
 
 func _vector_to_block_pos(v: Vector3):
 	return Vector3(floor(v.x/_selection.voxel_world.BLOCK_SIZE), floor(v.y/_selection.voxel_world.BLOCK_SIZE), floor(v.z/_selection.voxel_world.BLOCK_SIZE))
@@ -217,3 +253,4 @@ func _better_range(from: int, to: int, max_range: int):
 	if abs(from-to) > max_range:
 		to = from + max_range*dir
 	return range(from, to+dir, dir)
+
