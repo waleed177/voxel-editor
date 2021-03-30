@@ -108,7 +108,6 @@ __meta__ = {
 }
 
 [node name="Palette" type="Tabs" parent="VBoxContainer/TabContainer"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 4.0
@@ -128,11 +127,18 @@ __meta__ = {
 margin_right = 1016.0
 margin_bottom = 376.0
 
-[node name="GridContainer" type="GridContainer" parent="VBoxContainer/TabContainer/Palette/MarginContainer/VBoxContainer"]
+[node name="AddColor" type="Button" parent="VBoxContainer/TabContainer/Palette/MarginContainer/VBoxContainer"]
 margin_right = 1016.0
-margin_bottom = 352.0
+margin_bottom = 20.0
+rect_min_size = Vector2( 0, 16 )
+text = "Add Color"
+
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer/TabContainer/Palette/MarginContainer/VBoxContainer"]
+margin_top = 24.0
+margin_right = 1016.0
+margin_bottom = 376.0
 size_flags_vertical = 3
-columns = 4
+columns = 7
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -173,6 +179,7 @@ __meta__ = {
 }
 
 [node name="Schematics" type="Tabs" parent="VBoxContainer/TabContainer"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = 4.0
@@ -224,6 +231,7 @@ __meta__ = {
 [connection signal="pressed" from="VBoxContainer/ConvertToMesh" to="." method="_on_ConvertToMesh_pressed"]
 [connection signal="pressed" from="VBoxContainer/NoTool" to="." method="_on_NoTool_pressed"]
 [connection signal="color_changed" from="VBoxContainer/TabContainer/Palette" to="." method="_on_Palette_color_changed"]
+[connection signal="pressed" from="VBoxContainer/TabContainer/Palette/MarginContainer/VBoxContainer/AddColor" to="VBoxContainer/TabContainer/Palette" method="_on_AddColor_pressed"]
 [connection signal="color_changed" from="VBoxContainer/TabContainer/Palette/ColorPickerPopup/Panel/MarginContainer/ColorPicker" to="VBoxContainer/TabContainer/Palette" method="_on_ColorPicker_color_changed"]
 [connection signal="schematic_changed" from="VBoxContainer/TabContainer/Schematics" to="." method="_on_Schematics_schematic_changed"]
 [connection signal="pressed" from="VBoxContainer/TabContainer/Schematics/MarginContainer2/VBoxContainer/SaveToSchematic" to="VBoxContainer/TabContainer/Schematics" method="_on_SaveToSchematic_pressed"]
