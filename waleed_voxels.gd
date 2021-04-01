@@ -4,7 +4,11 @@ extends EditorPlugin
 const FILL_LENGTH_MAX = 32
 
 var dock
-var mode = "none"
+var mode = "none" setget set_mode
+func set_mode(val):
+	mode = val
+	if mode == "none" and _get_cube_gizmo():
+		_get_cube_gizmo().queue_free()
 var _undo_redo: UndoRedo
 var building_color: Color = Color.white
 var _selection: VoxelSelectionInformation = VoxelSelectionInformation.new()
@@ -125,7 +129,6 @@ func forward_spatial_gui_input(camera, event):
 		
 		if  _selection.should_perform_filling:
 			if mode == "place" or mode == "clear":
-				_undo_redo.undo()
 				_undoable_fill(_selection.voxel_world, _selection.first_corner, _selection.second_corner, 1 if mode == "place" else 0, true, building_color)
 			elif mode == "walls":
 				_undoable_make_four_walls(_selection.voxel_world, _selection.first_corner, _selection.second_corner, dock.wall_height, 1, true, building_color)
@@ -150,14 +153,20 @@ func forward_spatial_gui_input(camera, event):
 		_selection.should_perform_filling = mode != "none" and intersection and (_selection.ray_hit - intersection).length() > 2
 		
 		if _selection.should_perform_filling:
-			if cube:
+			if cube and not cube.visible:
+				if mode == "place":
+					_undo_redo.undo()
 				cube.visible = true
 			_selection.first_corner = _selection.block_position
 			if mode == "place":
 				_selection.first_corner -= _selection.ray_normal
 			_selection.second_corner = block_pos
 			_update_selection()
-			
+		else:
+			if cube and cube.visible:
+				if mode == "place":
+					_undo_redo.redo()
+				cube.visible = false
 		res = true
 	return res
 
