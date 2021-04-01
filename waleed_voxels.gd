@@ -18,8 +18,8 @@ func handles(object):
 	return object is VoxelChunk
 
 func _enter_tree():
-	add_custom_type("VoxelChunk", "MeshInstance", preload("voxel_chunk.gd"), preload("icon.png"))
-	add_custom_type("VoxelWorld", "Spatial", preload("voxel_world.gd"), preload("icon.png"))
+	add_custom_type("VoxelChunk", "MeshInstance", preload("voxel_chunk.gd"), null)
+	add_custom_type("VoxelWorld", "Spatial", preload("voxel_world.gd"), null)
 	
 	# Dock stuff
 	dock = preload("./ui/dock/dock.tscn").instance()
