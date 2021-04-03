@@ -112,7 +112,8 @@ func forward_spatial_gui_input(camera, event):
 						_selection.block_position += result.normal
 					_undoable_place_chunk(_selection.voxel_world, schema_to_place, _selection.block_position)
 					res = true
-					
+				if (mode == "select" or mode == "walls") and _hold_and_drag_on_top:
+					_selection.block_position += result.normal
 				
 				if mode != "none":
 					var cube = CSGBox.new()
