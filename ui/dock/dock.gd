@@ -4,6 +4,8 @@ extends Control
 signal convert_to_mesh_button_pressed
 signal schematic_changed
 signal fill_button_pressed
+signal single_click_on_top_changed
+signal hold_and_drag_on_top_changed
 
 var plugin
 var wall_height setget ,_get_wall_height
@@ -49,3 +51,9 @@ func _on_Schematics_schematic_changed(schema):
 
 func _on_Fill_pressed():
 	emit_signal("fill_button_pressed")
+
+func _on_SingleClickOnTopCheckBox_toggled(button_pressed):
+	emit_signal("single_click_on_top_changed", button_pressed)
+
+func _on_HoldAndDragOnTopCheckBox_toggled(button_pressed):
+	emit_signal("hold_and_drag_on_top_changed", button_pressed)

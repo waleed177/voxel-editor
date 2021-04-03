@@ -103,8 +103,22 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="TabContainer" type="TabContainer" parent="VBoxContainer"]
+[node name="SingleClickOnTopCheckBox" type="CheckBox" parent="VBoxContainer"]
 margin_top = 212.0
+margin_right = 1024.0
+margin_bottom = 236.0
+pressed = true
+text = "Single click on top"
+
+[node name="HoldAndDragOnTopCheckBox" type="CheckBox" parent="VBoxContainer"]
+margin_top = 240.0
+margin_right = 1024.0
+margin_bottom = 264.0
+pressed = true
+text = "Hold and drag on top"
+
+[node name="TabContainer" type="TabContainer" parent="VBoxContainer"]
+margin_top = 268.0
 margin_right = 1024.0
 margin_bottom = 600.0
 size_flags_vertical = 3
@@ -131,7 +145,7 @@ __meta__ = {
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/TabContainer/Palette/MarginContainer"]
 margin_right = 1016.0
-margin_bottom = 352.0
+margin_bottom = 296.0
 
 [node name="AddColor" type="Button" parent="VBoxContainer/TabContainer/Palette/MarginContainer/VBoxContainer"]
 margin_right = 1016.0
@@ -142,7 +156,7 @@ text = "Add Color"
 [node name="GridContainer" type="GridContainer" parent="VBoxContainer/TabContainer/Palette/MarginContainer/VBoxContainer"]
 margin_top = 24.0
 margin_right = 1016.0
-margin_bottom = 352.0
+margin_bottom = 296.0
 size_flags_vertical = 3
 columns = 7
 __meta__ = {
@@ -203,7 +217,7 @@ __meta__ = {
 
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/TabContainer/Schematics/MarginContainer2"]
 margin_right = 1016.0
-margin_bottom = 352.0
+margin_bottom = 296.0
 
 [node name="SchematicName" type="TextEdit" parent="VBoxContainer/TabContainer/Schematics/MarginContainer2/VBoxContainer"]
 margin_right = 1016.0
@@ -237,6 +251,8 @@ __meta__ = {
 [connection signal="pressed" from="VBoxContainer/SelectionTool" to="." method="_on_SelectionTool_pressed"]
 [connection signal="pressed" from="VBoxContainer/ConvertToMesh" to="." method="_on_ConvertToMesh_pressed"]
 [connection signal="pressed" from="VBoxContainer/NoTool" to="." method="_on_NoTool_pressed"]
+[connection signal="toggled" from="VBoxContainer/SingleClickOnTopCheckBox" to="." method="_on_SingleClickOnTopCheckBox_toggled"]
+[connection signal="toggled" from="VBoxContainer/HoldAndDragOnTopCheckBox" to="." method="_on_HoldAndDragOnTopCheckBox_toggled"]
 [connection signal="color_changed" from="VBoxContainer/TabContainer/Palette" to="." method="_on_Palette_color_changed"]
 [connection signal="pressed" from="VBoxContainer/TabContainer/Palette/MarginContainer/VBoxContainer/AddColor" to="VBoxContainer/TabContainer/Palette" method="_on_AddColor_pressed"]
 [connection signal="color_changed" from="VBoxContainer/TabContainer/Palette/ColorPickerPopup/Panel/MarginContainer/ColorPicker" to="VBoxContainer/TabContainer/Palette" method="_on_ColorPicker_color_changed"]

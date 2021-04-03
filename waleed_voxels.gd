@@ -13,6 +13,8 @@ var _undo_redo: UndoRedo
 var building_color: Color = Color.white
 var _selection: VoxelSelectionInformation = VoxelSelectionInformation.new()
 var schema_to_place: VoxelSchematic
+var _hold_and_drag_on_top: bool = true
+var _single_click_on_top: bool = true
 
 func handles(object):
 	return object is VoxelChunk
@@ -28,10 +30,17 @@ func _enter_tree():
 	dock.connect("convert_to_mesh_button_pressed", self, "_on_convert_to_mesh_button_pressed")
 	dock.connect("schematic_changed", self, "_on_schematic_changed")
 	dock.connect("fill_button_pressed", self, "_on_fill_button_pressed")
-	
+	dock.connect("hold_and_drag_on_top_changed", self, "_on_hold_and_drag_on_top_changed")
+	dock.connect("single_click_on_top_changed", self, "_on_single_click_on_top_changed")
 	set_input_event_forwarding_always_enabled()
 
 	_undo_redo = get_undo_redo()
+
+func _on_hold_and_drag_on_top_changed(button_pressed):
+	_hold_and_drag_on_top = button_pressed
+
+func _on_single_click_on_top_changed(button_pressed):
+	_single_click_on_top = button_pressed
 
 func _on_schematic_changed(schema):
 	self.schema_to_place = schema
@@ -89,7 +98,8 @@ func forward_spatial_gui_input(camera, event):
 				_selection.block_position = obj.chunk_position*_selection.voxel_world.CHUNK_SIZE + block_position
 
 				if mode == "place":
-					_selection.block_position += result.normal
+					if _single_click_on_top:
+						_selection.block_position += result.normal
 					_selection.block_data = _selection.voxel_world.get_block_data(_selection.block_position)
 					_undoable_set_block(_selection.voxel_world, _selection.block_position, 1, true, building_color)
 					res = true
@@ -98,7 +108,8 @@ func forward_spatial_gui_input(camera, event):
 					_undoable_set_block(_selection.voxel_world, _selection.block_position, 0, true, building_color)
 					res = true
 				elif mode == "place_schematic":
-					_selection.block_position += result.normal
+					if _single_click_on_top:
+						_selection.block_position += result.normal
 					_undoable_place_chunk(_selection.voxel_world, schema_to_place, _selection.block_position)
 					res = true
 					
@@ -140,7 +151,15 @@ func forward_spatial_gui_input(camera, event):
 				cube.queue_free()
 			_selection.voxel_world = null
 	if event is InputEventMouseMotion and Input.is_mouse_button_pressed(1) and _selection.voxel_world:
-		var plane = Plane(_selection.ray_normal, _selection.ray_normal.dot(_selection.ray_hit-_selection.ray_normal))
+		var hit_offset = (_selection.voxel_world.BLOCK_SIZE/2) * _selection.ray_normal
+		if not _hold_and_drag_on_top or mode == "clear":
+			hit_offset *= -1
+		var plane = Plane(
+			_selection.ray_normal, 
+			_selection.ray_normal.dot(
+				_selection.ray_hit + hit_offset
+			)
+		)
 		var cube = _get_cube_gizmo()
 		var from = camera.project_ray_origin(event.position)
 		
@@ -158,7 +177,7 @@ func forward_spatial_gui_input(camera, event):
 					_undo_redo.undo()
 				cube.visible = true
 			_selection.first_corner = _selection.block_position
-			if mode == "place":
+			if mode == "place" and not _hold_and_drag_on_top:
 				_selection.first_corner -= _selection.ray_normal
 			_selection.second_corner = block_pos
 			_update_selection()
